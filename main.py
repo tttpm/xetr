@@ -15,11 +15,8 @@ colorama.init()
 
 
 
-print(stuff.logo())
-
-
-print(f"eXtremely new console skin Editor for Team Run v{stuff.VERSION} by {engine.Color(255,102,0).get_ansi()}Tipim{engine.CLEAR_COLOR}")
-
+print(stuff.greeting())
+    
 if conf["check_version"]:
     check.verch(stuff.VERSION)
 
@@ -35,15 +32,18 @@ main_cursor = engine.Cursor(H//2, W//2, H, W, engine.Color(0,0,0))
 canv = engine.ColorMatrix(W, H, engine.Color(0,0,0,0), weakref.ref(main_cursor)(), stuff.SIDE_TEXTS[0])
 
 mankind = dead = blood = fuel = hell = full = [69]
-print(1)
+
 while (mankind is dead) and (blood is fuel) and (hell is full): #does anybody care about my code?
     try:
         stuff.clear()
         print(bkg + canv)
-        print(main_cursor.row, main_cursor.column)
+        print(stuff.DIGITS1)
+        print(f"cursor position - ({stuff.DIGITS2[main_cursor.column]};{stuff.DIGITS2[main_cursor.row]})")
+        print(f"current color - #{main_cursor.color.get_hex()} {main_cursor.color}  {engine.CLEAR_COLOR}")
+
+        print(canv.hist_pos)
         
         action = kb.get_command()
-        
         match action:
       
             case "crs_move_up":
@@ -70,6 +70,12 @@ while (mankind is dead) and (blood is fuel) and (hell is full): #does anybody ca
             case "crs_color_change":
                 main_cursor.color = engine.Color.create_from_hex(input("Type the new color's HEX\n>> "))
 
+            case "canv_undo":
+                canv.undo()
+
+            case "canv_redo":
+                canv.redo()
+                
             case "canv_skin_export":
                 print(f"here your skin is:\n{canv.get_trskin()}")
                 print("type 'img' to save it as PNG file, anything else otherwise")
@@ -83,7 +89,11 @@ while (mankind is dead) and (blood is fuel) and (hell is full): #does anybody ca
                     canv = engine.ColorMatrix.create_from_img(input("type the path to the image\n>> "), weakref.ref(main_cursor)(), stuff.SIDE_TEXTS[0])
                 else:
                     canv = engine.ColorMatrix.create_from_trskin(q, weakref.ref(main_cursor)(), stuff.SIDE_TEXTS[0])
-
+            case "debug":
+                print(*canv.history, sep='\n')
+                
+                input()
+                
     except Exception as e:
         print("\n\noooooops... an error has occured (probably it's not my fault XD)\n\n")
         traceback.print_exc()

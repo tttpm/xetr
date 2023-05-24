@@ -1,6 +1,7 @@
 from weakref import ref
 from base64 import b64encode, b64decode
 from zlib import decompress, compressobj, MAX_WBITS, DEFLATED
+import copy
 
 from PIL import Image, ImageColor, ImageDraw
 
@@ -213,7 +214,7 @@ class ColorArray():
             c = self[i]
             
             if self.cursor and self.cursor.column == i and self.cursor.row == self.index:
-                c += self.cursor.color
+                c = self.cursor.color
     
             res += str(c) + '##'
 
@@ -241,6 +242,9 @@ class ColorMatrix():
         self.height = height
         self.cursor = cursor
         
+        self.history = []
+        self.hist_pos = -1
+        
         self.side_text = side_text.strip('\n').split('\n')
 
         
@@ -251,6 +255,7 @@ class ColorMatrix():
             
             self.__content.append(ColorArray(width, color, cursor = self.cursor, index = i))
 
+        self.__record()
 
     def set_cursor(self, cursor):
         self.cursor = cursor
@@ -273,6 +278,7 @@ class ColorMatrix():
         column = column if column else self.cursor.column
         new_color = new_color if new_color else self.cursor.color
         self.__content[row][column] = new_color
+        self.__record()
 
     def __str__(self):
         
@@ -355,6 +361,7 @@ class ColorMatrix():
         column = column if column else self.cursor.column
         new_color = new_color if new_color else self.cursor.color
         self.__fill(row, column, new_color)
+        self.__record()
 
     def get_trskin(self):
         res = ''
@@ -455,8 +462,34 @@ class ColorMatrix():
             [e, e, e, e, e, e, s, s, s, e, e, e, e, s, s, s, e, e, e, e]
             
             ], cursor, side_text)
+    
 
+    def __record(self): #he rember :D
+        if self.hist_pos != -1:
+            self.history = self.history[:self.hist_pos+1]
+        self.hist_pos = -1
+        self.history.append(copy.deepcopy(self))
 
+    def __restore(self, index): #why.
+        cm = self.history[index]
+        for i in range(self.height):
+            for j in range(self.width):
+                self[i][j] = cm[i][j]
+
+    def undo(self):
+        if len(self.history) <= -self.hist_pos:
+            return 0
+        self.hist_pos -= 1
+        self.__restore(self.hist_pos)
+        return 1
+
+    def redo(self):
+        if self.hist_pos == -1:
+            return 0
+        self.hist_pos += 1
+        self.__restore(self.hist_pos)
+        return 1
+        
 
 
 

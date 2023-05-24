@@ -12,12 +12,14 @@ DEFAULT_SETTINGS = {
         "crs_click_eraser": "e",
         "canv_skin_export": "x",
         "canv_skin_import": "i",
+        "canv_undo": "z",
+        "canv_redo": "y",
         "debug": "d",
         "back": "backspace",
         "quit": "q"
     },
 
-    "background_skin": "trSkin1MzCAAGuDUcYAMRwNQNDNDcFwgwJ6MIaQU8lz/Ah0s6OriamlCzKDQsWjbh518wC6ebTcINLNZi5GTmZGQMVwBmYM0pMx6uZRN1Pi5kHieOo3+Sizi55OHSRuBgA=",
+    "background_skin": "trSkin1S0tLSU1MSUuzThtlDBAj0QAEkRlpUEAfxhByKjmOH4FuTkw1MbVMQWZQrHjUzaNuThnNg4PczWYpRklmRsgMzBikJ2PUzaNupsTNg8Tx1G/yUWYXPZ06SNwMAA==",
     "check_version": True,
     "devmode": False
     
