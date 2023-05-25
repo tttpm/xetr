@@ -119,7 +119,7 @@ def settings():
                     new_key = kb.read_key()
                     
                     if new_key in used_keys:
-                        print(f"hey, you've choosed [{new_key}] before for other command!")
+                        print(f"hey, you've chosen [{new_key}] before for other command!")
                         continue
                     
                     used_keys.add(new_key)
