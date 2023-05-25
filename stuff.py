@@ -1,4 +1,8 @@
 import config as cfg
+import kb
+
+import sys
+import time
 
 VERSION = "0.1"
 
@@ -65,7 +69,7 @@ SIDE_TEXTS = [
  E  |     export skin - [{k["canv_skin_export"]}]
  F  |     undo - [{k["canv_undo"]}]
  G  |     redo - [{k["canv_redo"]}]
- H  |     settings - [{k["back"]}]
+ H  |     settings - [{k["back_or_settings"]}]
         
 lmao this line won't be displayed
 and this
@@ -80,7 +84,56 @@ DIGITS2 = "0123456789ABCDEFGHIJ"
 
 
 
-
+def ask(question="", no="n", yes="Y"):
+    while True:
+        answer = input(question)
+        if answer != no and answer != yes:
+            print(f"it's not {yes} nor {no}, try again!")
+            continue
+        return answer == yes
+    
+def settings():
+    print("\nyou've entered the settings menu!!!!")
+    new_conf = {"keys":{}}
+    print("\nfirst of all, do u wanna adjust keys?")
+    
+    if ask("(Y/n) >> "):
+        print("\nokay! i recommend you use english letters [a]-[z], [A]-[Z] (case counts!), digits [0]-[9], arrow keys, [enter], [space]")
+        print("but you can choose other languages' letters and funny keys like [insert] as well")
+        print("\nso, let's begin!")
+        while True:
+            used_keys = set()
+            for command in cfg.DEFAULT_SETTINGS["keys"]:
+                why = True
+                while why:
+                    print(f"new key for '{command}': ", end='')
+                    sys.stdout.flush()
+                    
+                    new_key = kb.read_key()
+                    
+                    if new_key in used_keys:
+                        print(f"hey, you've choosed [{new_key}] before for other command!")
+                        continue
+                    
+                    used_keys.add(new_key)
+                    new_conf["keys"][command] = new_key
+                    print(f"[{new_key}]")
+                    
+                    why = False
+                    time.sleep(0.1)
+                    
+                
+            if ask("done?\n(Y/n) >> "):
+                break
+    print("\nalright, let's proceed")      
+    new_conf["check_version"] = ask("check version on launch?\n(Y/n) >> ")
+    print("roger that.")
+    if ask("\nlastly, do you want to change the skin on background?\n(Y/n) >> "):
+        new_conf["background_skin"] = input("and new background skin is?\n>> ")
+    print("\nthank you for using XETR!")
+    return new_conf
+        
+    
 
 
 

@@ -7,10 +7,10 @@ keys = {v: k for k, v in get_config()["keys"].items()}
 SPECIAL_KEYS = {
     
     rk.BACKSPACE: "backspace",
-    rk.UP: "up",
-    rk.DOWN: "down",
-    rk.LEFT: "left",
-    rk.RIGHT: "right",
+    rk.UP: "arrow_up",
+    rk.DOWN: "arrow_down",
+    rk.LEFT: "arrow_left",
+    rk.RIGHT: "arrow_right",
     rk.F1: "f1",
     rk.F2: "f2",
     rk.F3: "f3",

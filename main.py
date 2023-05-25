@@ -1,3 +1,5 @@
+import importlib
+
 import weakref
 import traceback
 
@@ -41,7 +43,6 @@ while (mankind is dead) and (blood is fuel) and (hell is full): #does anybody ca
         print(f"cursor position - ({stuff.DIGITS2[main_cursor.column]};{stuff.DIGITS2[main_cursor.row]})")
         print(f"current color - #{main_cursor.color.get_hex()} {main_cursor.color}  {engine.CLEAR_COLOR}")
 
-        print(canv.hist_pos)
         
         action = kb.get_command()
         match action:
@@ -89,14 +90,29 @@ while (mankind is dead) and (blood is fuel) and (hell is full): #does anybody ca
                     canv = engine.ColorMatrix.create_from_img(input("type the path to the image\n>> "), weakref.ref(main_cursor)(), stuff.SIDE_TEXTS[0])
                 else:
                     canv = engine.ColorMatrix.create_from_trskin(q, weakref.ref(main_cursor)(), stuff.SIDE_TEXTS[0])
-            case "debug":
-                print(*canv.history, sep='\n')
+
+            case "back_or_settings":
+                config.save_config(stuff.settings())
+
+                conf = config.get_config()
+                importlib.reload(stuff)
+                importlib.reload(kb)
+
+                bkg = engine.ColorMatrix.create_from_trskin(conf["background_skin"])
+                canv.side_text = stuff.SIDE_TEXTS[0].split("\n")
+                print(f"\n\npress [{conf['keys']['back_or_settings']}] to continue")
+                kb.wait_for_command("back_or_settings")
+
+            case "quit":
+                print("are you sure that you want to quit? ><")
+                print("(type 'n' if you aren't and everything else otherwise.)")
+                if input(">> ") == "n":
+                    continue
+                break
                 
-                input()
                 
     except Exception as e:
         print("\n\noooooops... an error has occured (probably it's not my fault XD)\n\n")
         traceback.print_exc()
-        print(f"\n\npress [{conf['keys']['back']}] to continue")
-        kb.wait_for_command("back")
-input()
+        print(f"\n\npress [{conf['keys']['back_or_settings']}] to continue")
+        kb.wait_for_command("back_or_settings")

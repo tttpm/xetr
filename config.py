@@ -2,10 +2,10 @@ DEFAULT_SETTINGS = {
 
     "keys": {
     
-        "crs_move_up": "up",
-        "crs_move_down": "down",
-        "crs_move_left": "left",
-        "crs_move_right": "right",
+        "crs_move_up": "arrow_up",
+        "crs_move_down": "arrow_down",
+        "crs_move_left": "arrow_left",
+        "crs_move_right": "arrow_right",
         "crs_color_change": "c",
         "crs_click_fill": "f",
         "crs_click_brush": "space",
@@ -14,14 +14,12 @@ DEFAULT_SETTINGS = {
         "canv_skin_import": "i",
         "canv_undo": "z",
         "canv_redo": "y",
-        "debug": "d",
-        "back": "backspace",
+        "back_or_settings": "backspace",
         "quit": "q"
     },
 
     "background_skin": "trSkin1S0tLSU1MSUuzThtlDBAj0QAEkRlpUEAfxhByKjmOH4FuTkw1MbVMQWZQrHjUzaNuThnNg4PczWYpRklmRsgMzBikJ2PUzaNupsTNg8Tx1G/yUWYXPZ06SNwMAA==",
-    "check_version": True,
-    "devmode": False
+    "check_version": True
     
 }
 
@@ -90,9 +88,6 @@ def save_config(conf: dict, file = "csetr_config.txt"):
         
         return 0
         
-   
-        
-
 
 
     
