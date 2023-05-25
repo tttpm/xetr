@@ -139,10 +139,3 @@ def settings():
         new_conf["background_skin"] = input("and new background skin is?\n>> ")
     print("\nthank you for using XETR!")
     return new_conf
-        
-    
-
-
-
-
-
