@@ -105,7 +105,7 @@ while (mankind is dead) and (blood is fuel) and (hell is full): #does anybody ca
 
             case "quit":
                 print("are you sure that you want to quit? ><")
-                print("(type 'n' if you aren't and everything else otherwise.)")
+                print("(type 'n' if you aren't and anything else otherwise.)")
                 if input(">> ") == "n":
                     continue
                 break
