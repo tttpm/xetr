@@ -87,8 +87,3 @@ def save_config(conf: dict, file = "csetr_config.txt"):
     except:
         
         return 0
-        
-
-
-    
-   

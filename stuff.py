@@ -76,7 +76,14 @@ and this
 this too
 and this as well
 :D
-    '''
+btw, here's some credits
+Thank gstroin for code of some complicated things like decoding trskins
+Thank dkorjey for a bit of competition
+Thank some random guys from internet that made precious "readchar" module
+Thank tdf for being the cutest girl in the whole universe <3 <3 <3
+
+Thank y'all for support and motivation!
+'''
 ]   
      
 DIGITS1 = "   0 1 2 3 4 5 6 7 8 9 A B C D E F G H I J\n"

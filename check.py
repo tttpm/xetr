@@ -33,5 +33,3 @@ def verch(current_version: str):
             print(f"\033[38;2;255;255;0mNew ({newest}) version available!\033[0m (you can disable this prompt in settings)")
     except:
         print("\033[38;2;255;255;0mCouldn't check your version (maybe some problems with internet connection)\033[0m  ((you can disable that option tho))")
-
-

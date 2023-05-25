@@ -5,8 +5,8 @@ import traceback
 
 import config
 conf = config.get_config()
-import stuff
 import check
+import stuff
 check.libch(stuff.USED_LIBS)
 
 import engine
@@ -14,7 +14,6 @@ import kb
 
 import colorama
 colorama.init()
-
 
 
 print(stuff.greeting())

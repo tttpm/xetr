@@ -31,7 +31,6 @@ SPECIAL_KEYS = {
     rk.PAGE_DOWN: "pgdn",
     rk.ENTER: "enter",
     " ": "space",
-    
 }
     
 

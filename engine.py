@@ -488,18 +488,4 @@ class ColorMatrix():
             return 0
         self.hist_pos += 1
         self.__restore(self.hist_pos)
-        return 1
-        
-
-
-
-
-
-
-
-
-
-
-
-        
-        
+        return 1        
