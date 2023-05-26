@@ -3,6 +3,7 @@ from base64 import b64encode, b64decode
 from zlib import decompress, compressobj, MAX_WBITS, DEFLATED
 import copy
 
+
 from PIL import Image, ImageColor, ImageDraw
 
 CLEAR_COLOR = '\033[0m'
@@ -462,13 +463,15 @@ class ColorMatrix():
             [e, e, e, e, e, e, s, s, s, e, e, e, e, s, s, s, e, e, e, e]
             
             ], cursor, side_text)
-    
+
+    def get_list(self):
+        return self.__content
 
     def __record(self): #he rember :D
         if self.hist_pos != -1:
             self.history = self.history[:self.hist_pos+1]
         self.hist_pos = -1
-        self.history.append(copy.deepcopy(self))
+        self.history.append(copy.deepcopy(self.get_list()))
 
     def __restore(self, index): #why.
         cm = self.history[index]
