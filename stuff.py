@@ -1,10 +1,12 @@
 import config as cfg
 import kb
+import engine
 
 import sys
 import time
 
-VERSION = "0.1"
+VERSION = "0.1.1"
+
 
 def clear():
     import os, sys
@@ -62,14 +64,14 @@ SIDE_TEXTS = [
  7  |     paint one pixel - [{k["crs_click_brush"]}]
  8  |     erase one pixel - [{k["crs_click_eraser"]}]
  9  |     fill an area - [{k["crs_click_fill"]}] 
- A  |     change color - [{k["crs_color_change"]}]
+ A  |     change color - [{k["crs_color_change"]}], pick color from selected pixel - [{k["crs_click_colorpicker"]}]
  B  |
  C  | misc:
  D  |     import skin - [{k["canv_skin_import"]}]
  E  |     export skin - [{k["canv_skin_export"]}]
- F  |     undo - [{k["canv_undo"]}]
- G  |     redo - [{k["canv_redo"]}]
- H  |     settings - [{k["back_or_settings"]}]
+ F  |     undo - [{k["canv_undo"]}], redo - [{k["canv_redo"]}]
+ G  |     settings - [{k["back_or_settings"]}]
+ H  |     quit - [{k["quit"]}]
         
 lmao this line won't be displayed
 and this
@@ -87,24 +89,22 @@ Thank y'all for support and motivation!
 ]   
      
 DIGITS1 = "   0 1 2 3 4 5 6 7 8 9 A B C D E F G H I J\n"
-DIGITS2 = "0123456789ABCDEFGHIJ"
+DIGITS2 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 
 
-def ask(question="", no="n", yes="Y"):
-    while True:
-        answer = input(question)
-        if answer != no and answer != yes:
-            print(f"it's not {yes} nor {no}, try again!")
-            continue
-        return answer == yes
-    
+def ask(prompt="", yes = "y", preffered = "y"):
+    answer = input(prompt)
+    if answer == "":
+        answer = preffered
+    return answer.lower() == yes
+
 def settings():
     print("\nyou've entered the settings menu!!!!")
     new_conf = {"keys":{}}
     print("\nfirst of all, do u wanna adjust keys?")
     
-    if ask("(Y/n) >> "):
+    if ask("(y/N) >> ", preffered="n"):
         print("\nokay! i recommend you use english letters [a]-[z], [A]-[Z] (case counts!), digits [0]-[9], arrow keys, [enter], [space]")
         print("but you can choose other languages' letters and funny keys like [insert] as well")
         print("\nso, let's begin!")
@@ -133,9 +133,15 @@ def settings():
             if ask("done?\n(Y/n) >> "):
                 break
     print("\nalright, let's proceed")      
-    new_conf["check_version"] = ask("check version on launch?\n(Y/n) >> ")
+    new_conf["check_version"] = ask("should version be checked on launch?\n(Y/n) >> ")
     print("roger that.")
-    if ask("\nlastly, do you want to change the skin on background?\n(Y/n) >> "):
-        new_conf["background_skin"] = input("and new background skin is?\n>> ")
+    if ask("\nlastly, do you want to change the skin on background?\n(y/N) >> ", preffered="n"):
+        while True:
+            sk = input("and new background skin is?\n>> ")
+            if not engine.is_valid_trskin(sk):
+                print("this is not a trskin, please try again")
+                continue
+            new_conf["background_skin"] = sk
+
     print("\nthank you for using XETR!")
     return new_conf

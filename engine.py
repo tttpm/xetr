@@ -492,3 +492,10 @@ class ColorMatrix():
         self.hist_pos += 1
         self.__restore(self.hist_pos)
         return 1        
+
+def is_valid_trskin(skin: str):
+    try:
+        ColorMatrix.create_from_trskin(skin)
+        return True
+    except:
+        return False

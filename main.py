@@ -32,17 +32,13 @@ bkg = engine.ColorMatrix.create_from_trskin(conf["background_skin"])
 main_cursor = engine.Cursor(H//2, W//2, H, W, engine.Color(0,0,0))                      
 canv = engine.ColorMatrix(W, H, engine.Color(0,0,0,0), weakref.ref(main_cursor)(), stuff.SIDE_TEXTS[0])
 
-mankind = dead = blood = fuel = hell = full = [69]
-
-while (mankind is dead) and (blood is fuel) and (hell is full): #does anybody care about my code?
+while True:
     try:
         stuff.clear()
         print(bkg + canv)
         print(stuff.DIGITS1)
-        print(f"cursor position - ({stuff.DIGITS2[main_cursor.column]};{stuff.DIGITS2[main_cursor.row]})")
         print(f"current color - #{main_cursor.color.get_hex()} {main_cursor.color}  {engine.CLEAR_COLOR}")
-
-        
+        print(f"selected pixel - ({stuff.DIGITS2[main_cursor.column % 26]};{stuff.DIGITS2[main_cursor.row % 26]}) #{canv[main_cursor.row][main_cursor.column].get_hex()} {canv[main_cursor.row][main_cursor.column]}  {engine.CLEAR_COLOR}")      
         action = kb.get_command()
         match action:
       
@@ -67,6 +63,9 @@ while (mankind is dead) and (blood is fuel) and (hell is full): #does anybody ca
             case "crs_click_fill":
                 canv.fill()
 
+            case "crs_click_colorpicker":
+                main_cursor.color = canv[main_cursor.row][main_cursor.column]
+            
             case "crs_color_change":
                 main_cursor.color = engine.Color.create_from_hex(input("Type the new color's HEX\n>> "))
 
@@ -98,7 +97,7 @@ while (mankind is dead) and (blood is fuel) and (hell is full): #does anybody ca
                 importlib.reload(kb)
 
                 bkg = engine.ColorMatrix.create_from_trskin(conf["background_skin"])
-                canv.side_text = stuff.SIDE_TEXTS[0].split("\n")
+                canv.side_text = stuff.SIDE_TEXTS[0].strip('\n').split("\n")
                 print(f"\n\npress [{conf['keys']['back_or_settings']}] to continue")
                 kb.wait_for_command("back_or_settings")
 
@@ -111,7 +110,7 @@ while (mankind is dead) and (blood is fuel) and (hell is full): #does anybody ca
                 
                 
     except Exception as e:
-        print("\n\noooooops... an error has occured (probably it's not my fault XD)\n\n")
+        print("\n\noooooops... an error has occured (probably it's not my fault, but if u think it is, tell me about that)\n\n")
         traceback.print_exc()
         print(f"\n\npress [{conf['keys']['back_or_settings']}] to continue")
         kb.wait_for_command("back_or_settings")

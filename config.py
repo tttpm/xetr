@@ -10,6 +10,7 @@ DEFAULT_SETTINGS = {
         "crs_click_fill": "f",
         "crs_click_brush": "space",
         "crs_click_eraser": "e",
+        "crs_click_colorpicker": "p",
         "canv_skin_export": "x",
         "canv_skin_import": "i",
         "canv_undo": "z",
