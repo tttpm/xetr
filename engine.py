@@ -14,7 +14,7 @@ class Color():
     
     '''literally color!!'''
     
-    def __init__(self, red: int, green: int, blue: int, alpha = 1):
+    def __init__(self, red: int, green: int, blue: int, alpha = 255):
         
         '''create Color using red, green, and alpha values'''
         
@@ -23,14 +23,14 @@ class Color():
             self.red = red
             
         except:
-            raise ValueError('invalid red value')
+            raise ValueError(f'invalid red value: {red}')
 
         try:
             assert type(green) == int and 0 <= green <= 255
             self.green = green
             
         except:
-            raise ValueError('invalid green value')
+            raise ValueError(f'invalid green value: {green}')
 
 
         try:
@@ -38,15 +38,16 @@ class Color():
             self.blue = blue
             
         except:
-            raise ValueError('invalid blue value')
+            raise ValueError(f'invalid blue value: {blue}')
         
         try:
-            if alpha > 1: alpha /= 255
-            assert (type(alpha) == float or type(alpha) == int) and 0 <= alpha <= 1
+            if type(alpha) == int:
+                alpha /= 255
+            assert type(alpha) == float and 0 <= alpha <= 1
             self.alpha = alpha
             
         except:
-            raise ValueError('invalid alpha value')
+            raise ValueError(f'invalid alpha value: {alpha}')
         
 
 
@@ -65,15 +66,15 @@ class Color():
 
         '''create Color using six- or eight-digit HEX'''
         
-        hex_ = hex_.replace('#', '')
+        hex_ = hex_.removeprefix("#")
         
         try:
             
             r = int(hex_[:2], 16)
             g = int(hex_[2:4], 16)
             b = int(hex_[4:6], 16)
-            a = 1
-            if len(hex_) > 6: a = int(hex_[6:8], 16)  / 255
+            a = 1.0
+            if len(hex_) > 6: a = int(hex_[6:8], 16) / 255
 
             
         except:
@@ -99,17 +100,56 @@ class Color():
         
         return Color(r, g, b)
 
+    @classmethod
+    def create_from_hsva(cls, h: int, s: int, v: int, a: float = 1.0):
+        h = h / 360.0
+        s = s / 100.0
+        v = v / 100.0
+        if s:
+            if h == 1.0: h = 0.0
+            i = int(h*6.0); f = h*6.0 - i
+            
+            w = int(255*( v * (1.0 - s) ))
+            q = int(255*( v * (1.0 - s * f) ))
+            t = int(255*( v * (1.0 - s * (1.0 - f)) ))
+            v = int(255*v)
+            
+            if i==0: return Color(v, t, w, a)
+            if i==1: return Color(q, v, w, a)
+            if i==2: return Color(w, v, t, a)
+            if i==3: return Color(w, q, v, a)
+            if i==4: return Color(t, w, v, a)
+            if i==5: return Color(v, w, q, a)
+        else: v = int(255*v); return Color(v, v, v, a)
+
+
+    def get_hsva(self):
+        r = self.red / 255
+        g = self.green / 255
+        b = self.blue / 255
+        a = self.alpha
+        cmin = min(r, g, b)
+        cmax = max(r, g, b)
+        d = cmax - cmin
+        if cmax == 0.0:
+            s = 0
+        else:
+            s = round(d / cmax * 100)
+        v = round(cmax * 100)
+        if d == 0:
+            return (0, s, v, a)
+        if cmax == r:
+            return (round(60 * (((g - b) / d) % 6)), s, v, a)
+        if cmax == g:
+            return (round(60 * (((b - r) / d) + 2)), s, v, a)
+        return (round(60 * (((r - g) / d) + 4)), s, v, a)
+
 
     def get_hex(self):
 
         '''get eight-digit HEX from Color'''
-    
-        alphabet = '0123456789abcdef'
         
-        return (alphabet[self.red // 16] + alphabet[self.red % 16] +
-               alphabet[self.green // 16] + alphabet[self.green % 16] +
-               alphabet[self.blue // 16] + alphabet[self.blue % 16] +
-               alphabet[round(self.alpha * 255) // 16] + alphabet[round(self.alpha * 255) % 16])
+        return "{:02X}{:02X}{:02X}{:02X}".format(*self.values())
 
     def get_ansi(self, back = 0, fore = 1):
         
@@ -149,8 +189,16 @@ class Color():
             return Color(r, g, b, a)
 
     def __iter__(self): 
-        return iter((self.red, self.green, self.blue, self.alpha))
+        return iter(self.values(alpha255=False))
+    
+    def values(self, alpha255 = True):
+        a = self.alpha
+        if alpha255:
+            a = round(a * 255)
+        return (self.red, self.green, self.blue, a)
 
+    def copy(self):
+        return Color(*self.values())
   
 
 
@@ -209,15 +257,24 @@ class ColorArray():
     def __str__(self):
         
         res = ''
+
+        if self.index % 2 == 0:
+            transparent = (Color(255, 255, 255), Color(191, 191, 191))
+        else:
+            transparent = (Color(191, 191, 191), Color(255, 255, 255))
         
         for i in range(self.size):
             
-            c = self[i]
+            c1, c2 = transparent
             
-            if self.cursor and self.cursor.column == i and self.cursor.row == self.index:
-                c = self.cursor.color
-    
-            res += str(c) + '##'
+            c1 = c1 + self[i]
+            c2 = c2 + self[i]
+
+            if self.cursor != None and self.cursor.row == self.index and self.cursor.column == i:
+                c1 += self.cursor.color
+                c2 += self.cursor.color
+
+            res += str(c1) + "#" + str(c2) + "#"
 
             
         return res + CLEAR_COLOR
@@ -237,7 +294,7 @@ class ColorMatrix():
 
     '''array of ColorArrays'''
     
-    def __init__(self, width: int, height: int, color: Color, cursor = None, side_text: str = ''):
+    def __init__(self, width: int, height: int, color: Color, cursor = None, side_text: str = '', init_record = True):
 
         self.width = width
         self.height = height
@@ -256,7 +313,8 @@ class ColorMatrix():
             
             self.__content.append(ColorArray(width, color, cursor = self.cursor, index = i))
 
-        self.__record()
+        if init_record:
+            self.__record()
 
     def set_cursor(self, cursor):
         self.cursor = cursor
@@ -275,9 +333,9 @@ class ColorMatrix():
         self[index] = value
 
     def paint(self, row = None, column = None, new_color = None):
-        row = row if row else self.cursor.row
-        column = column if column else self.cursor.column
-        new_color = new_color if new_color else self.cursor.color
+        row = row if row != None else self.cursor.row
+        column = column if column != None else self.cursor.column
+        new_color = new_color if new_color != None else self.cursor.color
         self.__content[row][column] = new_color
         self.__record()
 
@@ -364,10 +422,23 @@ class ColorMatrix():
         self.__fill(row, column, new_color)
         self.__record()
 
+    def __replace(self, from_color: Color, to_color: Color):
+        for i in range(self.height):
+            for j in range(self.width):
+                if self[i][j] == from_color:
+                    self[i][j] = to_color
+    
+    def replace(self, row: int = None, column: int = None, new_color: Color = None):
+        row = row if row != None else self.cursor.row
+        column = column if column != None else self.cursor.column
+        new_color = new_color if new_color != None else self.cursor.color
+        self.__replace(self[row][column], new_color)
+        self.__record()
+
     def get_trskin(self):
         res = ''
-        for i in range(LOOPER_HEIGHT):
-            for j in range(LOOPER_WIDTH):
+        for i in range(self.height):
+            for j in range(self.width):
                 res += self[i][j].get_hex() + ';'
                 
         deflate_compress = compressobj(9, DEFLATED, -MAX_WBITS)
@@ -377,8 +448,8 @@ class ColorMatrix():
 
 
     @classmethod
-    def create_from_trskin(cls, skin: str, cursor=None, side_text=''):
-        res = ColorMatrix(LOOPER_WIDTH, LOOPER_HEIGHT, Color(0,0,0,0), cursor, side_text)
+    def create_from_trskin(cls, skin: str, cursor=None, side_text='', init_record=False):
+        res = ColorMatrix(LOOPER_WIDTH, LOOPER_HEIGHT, Color(0,0,0,0), cursor, side_text, init_record)
         compressed = b64decode(skin[7:])
         hexes = str(decompress(compressed, -MAX_WBITS).decode()).split(';')
         hexes.pop()
@@ -389,7 +460,7 @@ class ColorMatrix():
                 j = 0
             res[i][j] = Color.create_from_hex(h)
             j += 1
-            
+        res.__record()
         return res
 
 
@@ -407,23 +478,24 @@ class ColorMatrix():
 
 
     @classmethod
-    def create_from_img(cls, img_path: str, cursor = None, side_text=''):
+    def create_from_img(cls, img_path: str, cursor = None, side_text = '', init_record = False):
         img = Image.open(img_path).convert('RGBA')
-        res = ColorMatrix(*img.size, Color(0,0,0,0), cursor,side_text)
+        res = ColorMatrix(*img.size, Color(0,0,0,0), cursor, side_text, init_record)
         img = img.load()
         for i in range(res.height):
             for j in range(res.width):
                 new = img[j, i]
                 res[i][j] = Color(*new)
+        res.__record()
         return res
 
 
 
 
     @classmethod
-    def create_from_list(cls, source: list, cursor=None, side_text=''):
+    def create_from_list(cls, source: list, cursor=None, side_text = '', init_record = False):
 
-        result = ColorMatrix(len(max(source, key = len)), len(source), Color(0,0,0,0), cursor, side_text)
+        result = ColorMatrix(len(max(source, key = len)), len(source), Color(0,0,0,0), cursor, side_text, init_record)
 
         for i in range(result.height):
 
@@ -437,7 +509,7 @@ class ColorMatrix():
                         
 
     @classmethod
-    def create_looper(cls, primary_color = Color(255, 255, 255), secondary_color = Color(0, 0, 0), background = Color(0,0,0,0), cursor=None, side_text=''):
+    def create_looper(cls, primary_color = Color(255, 255, 255), secondary_color = Color(0, 0, 0), background = Color(0,0,0,0), cursor=None, side_text='', init_record = False):
         e = background
         p, s = primary_color, secondary_color
         x, y = p + Color(0,0,0,68), s + Color(0,0,0,68)
@@ -462,16 +534,16 @@ class ColorMatrix():
             [e, e, e, e, e, e, s, s, s, e, e, e, e, s, s, s, e, e, e, e],
             [e, e, e, e, e, e, s, s, s, e, e, e, e, s, s, s, e, e, e, e]
             
-            ], cursor, side_text)
+            ], cursor, side_text, init_record)
 
     def get_list(self):
-        return self.__content
+        return copy.deepcopy(self.__content)
 
     def __record(self): #he rember :D
         if self.hist_pos != -1:
             self.history = self.history[:self.hist_pos+1]
         self.hist_pos = -1
-        self.history.append(copy.deepcopy(self.get_list()))
+        self.history.append(self.get_list())
 
     def __restore(self, index): #why.
         cm = self.history[index]
@@ -491,7 +563,11 @@ class ColorMatrix():
             return 0
         self.hist_pos += 1
         self.__restore(self.hist_pos)
-        return 1        
+        return 1
+
+    def prepend_history_from(self, other):
+        self.history = other.history + self.history
+        #self.hist_pos += len(other.history)        
 
 def is_valid_trskin(skin: str):
     try:

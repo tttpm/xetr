@@ -10,11 +10,14 @@ DEFAULT_SETTINGS = {
         "crs_click_fill": "f",
         "crs_click_brush": "space",
         "crs_click_eraser": "e",
-        "crs_click_colorpicker": "p",
+        "crs_click_pipette": "p",
+        "crs_click_replace": "r",
         "canv_skin_export": "x",
         "canv_skin_import": "i",
         "canv_undo": "z",
         "canv_redo": "y",
+        "canv_hide_background": "b",
+        "canv_show_cursor_position": "g",
         "back_or_settings": "backspace",
         "quit": "q"
     },
@@ -27,11 +30,11 @@ DEFAULT_SETTINGS = {
 
 
     
-def get_config(file = "csetr_config.txt"):
+def get_config(filename = "csetr_config.txt"):
     
     try:
-        
-        src = open(file, encoding="utf-8").read()
+        with open(filename, encoding="utf-8") as file:
+            src = file.read()
         src = eval(src)
         res = {}
         

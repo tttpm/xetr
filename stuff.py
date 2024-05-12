@@ -5,7 +5,7 @@ import engine
 import sys
 import time
 
-VERSION = "0.1.2"
+VERSION = "0.1.3"
 
 
 def clear():
@@ -54,22 +54,22 @@ USED_LIBS = {'colorama': 'colorama',
 k = cfg.get_config()['keys']
 SIDE_TEXTS = [
     f'''
- 0  | cursor movement:
- 1  |     up - [{k["crs_move_up"]}]
- 2  |     down - [{k["crs_move_down"]}]
- 3  |     right - [{k["crs_move_right"]}]
- 4  |     left - [{k["crs_move_left"]}]
- 5  |
+ 0  | canvas:
+ 1  |     up - [{k["crs_move_up"]}], down - [{k["crs_move_down"]}]
+ 2  |     right - [{k["crs_move_right"]}], left - [{k["crs_move_left"]}]
+ 3  |     show/hide cursor position - [{k["canv_show_cursor_position"]}]      
+ 4  |     hide/show background - [{k["canv_hide_background"]}]
+ 5  |     undo - [{k["canv_undo"]}], redo - [{k["canv_redo"]}]
  6  | drawing:
- 7  |     paint one pixel - [{k["crs_click_brush"]}]
- 8  |     erase one pixel - [{k["crs_click_eraser"]}]
+ 7  |     paint one pixel - [{k["crs_click_brush"]}] 
+ 8  |     erase one pixel - [{k["crs_click_eraser"]}] 
  9  |     fill an area - [{k["crs_click_fill"]}] 
- A  |     change color - [{k["crs_color_change"]}], pick color from selected pixel - [{k["crs_click_colorpicker"]}]
- B  |
- C  | misc:
- D  |     import skin - [{k["canv_skin_import"]}]
- E  |     export skin - [{k["canv_skin_export"]}]
- F  |     undo - [{k["canv_undo"]}], redo - [{k["canv_redo"]}]
+ A  |     change color - [{k["crs_color_change"]}] 
+ B  |     pick color from selected pixel - [{k["crs_click_pipette"]}]
+ C  |     replace color from selected pixel - [{k["crs_click_replace"]}]
+ D  | misc:
+ E  |     import skin - [{k["canv_skin_import"]}]
+ F  |     export skin - [{k["canv_skin_export"]}]  
  G  |     settings - [{k["back_or_settings"]}]
  H  |     quit - [{k["quit"]}]
         
@@ -145,3 +145,14 @@ def settings():
 
     print("\nthank you for using XETR!")
     return new_conf
+
+def cross(width: int = engine.LOOPER_WIDTH, height: int = engine.LOOPER_HEIGHT, row: int = 0, column: int = 0, color = engine.Color(0, 0, 0, 128), st = ""):
+    res = engine.ColorMatrix(width, height, engine.Color(0, 0, 0, 0.0), side_text=st)
+    for i in range(width):
+        if i != column:
+            res.paint(row, i, color)
+    for i in range(height):
+        if i != row:
+            res.paint(i, column, color)
+    return res
+
