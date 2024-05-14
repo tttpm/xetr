@@ -67,7 +67,8 @@ class Color():
         '''create Color using six- or eight-digit HEX'''
         
         hex_ = hex_.removeprefix("#")
-        
+        if len(hex_) == 3 or len(hex_) == 4:
+            hex_ = "".join([c + c for c in hex_])
         try:
             
             r = int(hex_[:2], 16)
