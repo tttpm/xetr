@@ -4,12 +4,12 @@ import engine
 
 import sys
 import time
+import os
 
 VERSION = "0.1.3"
 
 
 def clear():
-    import os, sys
     os.system('cls' if sys.platform == 'win32' else 'clear')
 
 def logo():
@@ -18,17 +18,16 @@ def logo():
     e = '\033[38;2;0;0;0m\033[48;2;255;255;255mE '
     return (
 
-        w + w + w + w + w + w + w + w + w + '\n' +
-        w + b + b + b + w + b + b + b + w + '\n' +
-        w + w + b + w + w + b + w + b + w + '\n' +
-        w + w + b + w + w + b + b + w + w + '\n' +
-        w + w + b + w + w + b + w + b + w + '\n' +
-        w + w + b + w + w + b + w + b + w + '\n' +
-        w + w + w + w + w + w + w + w + w + '\n' +
-        w + w + w + w + x + e + w + w + w + '\n' +
-        w + w + w + w + w + w + w + w + w + '\n' +
-
-        '\033[0m')
+        w + w + w + w + w + w + w + w + w + engine.CLEAR_COLOR + '\n' +
+        w + b + b + b + w + b + b + b + w + engine.CLEAR_COLOR + '\n' +
+        w + w + b + w + w + b + w + b + w + engine.CLEAR_COLOR + '\n' +
+        w + w + b + w + w + b + b + w + w + engine.CLEAR_COLOR + '\n' +
+        w + w + b + w + w + b + w + b + w + engine.CLEAR_COLOR + '\n' +
+        w + w + b + w + w + b + w + b + w + engine.CLEAR_COLOR + '\n' +
+        w + w + w + w + w + w + w + w + w + engine.CLEAR_COLOR + '\n' +
+        w + w + w + w + x + e + w + w + w + engine.CLEAR_COLOR + '\n' +
+        w + w + w + w + w + w + w + w + w + engine.CLEAR_COLOR + '\n'
+        )
         
 def greeting():
     y = "\033[38;2;255;255;0m"
@@ -64,7 +63,7 @@ SIDE_TEXTS = [
  7  |     paint one pixel - [{k["crs_click_brush"]}] 
  8  |     erase one pixel - [{k["crs_click_eraser"]}] 
  9  |     fill an area - [{k["crs_click_fill"]}] 
- A  |     change color - [{k["crs_color_change"]}] 
+ A  |     change color - [{k["clrpckr_open"]}] 
  B  |     pick color from selected pixel - [{k["crs_click_pipette"]}]
  C  |     replace color from selected pixel - [{k["crs_click_replace"]}]
  D  | misc:
@@ -101,7 +100,8 @@ def ask(prompt="", yes = "y", preffered = "y"):
 
 def settings():
     print("\nyou've entered the settings menu!!!!")
-    new_conf = {"keys":{}}
+    new_conf = {"keys":{}, "colorpicker_keys":{}}
+    old_conf = cfg.get_config()
     print("\nfirst of all, do u wanna adjust keys?")
     
     if ask("(y/N) >> ", preffered="n"):
@@ -113,7 +113,7 @@ def settings():
             for command in cfg.DEFAULT_SETTINGS["keys"]:
                 why = True
                 while why:
-                    print(f"new key for '{command}': ", end='')
+                    print(f"new key for '{command}' (current: {old_conf['keys'][command]}): ", end='')
                     sys.stdout.flush()
                     
                     new_key = kb.read_key()
@@ -129,7 +129,26 @@ def settings():
                     why = False
                     time.sleep(0.1)
                     
-                
+            print("ok, now let's adjust colorpicker keys")
+            used_keys = set()
+            for command in cfg.DEFAULT_SETTINGS["colorpicker_keys"]:
+                why = True
+                while why:
+                    print(f"new key for '{command}' (current: {old_conf['colorpicker_keys'][command]}): ", end='')
+                    sys.stdout.flush()
+                    
+                    new_key = kb.read_key()
+                    
+                    if new_key in used_keys:
+                        print(f"hey, you've chosen [{new_key}] before for other command!")
+                        continue
+                    
+                    used_keys.add(new_key)
+                    new_conf["colorpicker_keys"][command] = new_key
+                    print(f"[{new_key}]")
+                    
+                    why = False
+                    time.sleep(0.1)
             if ask("done?\n(Y/n) >> "):
                 break
     print("\nalright, let's proceed")      

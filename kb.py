@@ -3,6 +3,7 @@ import readchar.key as rk
 
 from config import get_config
 keys = {v: k for k, v in get_config()["keys"].items()}
+colorpicker_keys = {v: k for k, v in get_config()["colorpicker_keys"].items()}
 
 SPECIAL_KEYS = {
     
@@ -47,8 +48,13 @@ def wait_for(key: str):
         pass
 
 
-def get_command():
-
+def get_command(colorpicker_mode=False):
+    if colorpicker_mode:
+        pressed = read_key()
+        while pressed not in colorpicker_keys:
+            pressed = read_key()
+        return colorpicker_keys[pressed]
+    
     pressed = read_key()
     while pressed not in keys:
         pressed = read_key()
@@ -56,6 +62,6 @@ def get_command():
     return keys[pressed]
 
 
-def wait_for_command(command: str):
-    while get_command() != command:
+def wait_for_command(command: str, colorpicker_mode=False):
+    while get_command(colorpicker_mode) != command:
         pass

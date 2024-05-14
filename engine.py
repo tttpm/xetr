@@ -575,3 +575,299 @@ def is_valid_trskin(skin: str):
         return True
     except:
         return False
+
+class ColorPicker:
+    def __init__(self, radius: int = 10, hue: int = 0, saturation: int = 0, value: int = 0, alpha: float = 1.0,
+                 prompts: dict = {
+                     "-hue": "<- [q]",
+                     "+hue": "[w] ->",
+                     "-saturation": "<- [a]",
+                     "+saturation": "[s] ->",
+                     "-value": "<- [z]",
+                     "+value": "[x] ->",
+                     "-alpha": "<- [f]",
+                     "+alpha": "[g] ->"
+                 },
+                 deltas: dict = {
+                     "hue": 5,
+                     "saturation": 5,
+                     "value": 5,
+                     "alpha": 0.05
+                 }):
+        self.radius = radius
+        self.hue = hue
+        self.saturation = saturation
+        self.alpha = alpha
+        self.value = value
+        self.prompts = prompts
+        self.deltas = deltas
+        self._update_color()
+
+    def _update_color(self):
+        self.color = Color.create_from_hsva(self.hue, self.saturation, self.value, self.alpha)
+
+    def __str__(self):
+        
+        tc1, tc2 = Color(255, 255, 255), Color(191, 191, 191)
+
+        def draw_square_line(index: int, padding=10):
+            WIDTH = 16
+            if index == 0 or index == 17:
+                return " " * padding + "##" * (WIDTH + 2)
+            res = " " * padding + "##"
+            if index % 2 == 0:
+                res += (str(tc1 + self.color) + "#" + str(tc2 + self.color) + "#") * WIDTH
+            else:
+                res += (str(tc2 + self.color) + "#" + str(tc1 + self.color) + "#") * WIDTH
+            res += CLEAR_COLOR
+            res += "##"
+            return res
+
+        
+
+        res = ""
+
+        hue = self.hue
+        saturation = self.saturation
+        value = self.value
+        alpha = self.alpha
+
+        width = 2 * (2 * self.radius + 3)
+
+        #hue
+        res += "#" * width + draw_square_line(0) + "\n##"
+        color_list = []
+        hue1 = hue
+        for _ in range(self.radius):
+            hue1 -= self.deltas["hue"]
+            if hue1 < 0:
+                hue1 = 0
+            color_list.append(Color.create_from_hsva(hue1, saturation, value, alpha))
+
+        color_list.reverse()
+
+        color_list.append(Color.create_from_hsva(hue, saturation, value, alpha))
+
+        hue1 = hue
+        for _ in range(self.radius):
+            hue1 += self.deltas["hue"]
+            if hue1 > 360:
+                hue1 = 360
+            color_list.append(Color.create_from_hsva(hue1, saturation, value, alpha))
+
+        for color in color_list:
+            res += str(tc1 + color) + "#" + str(tc2 + color) + "#"
+        res += CLEAR_COLOR
+        res += "##"
+        res += f"{hue: 6}"
+        res += draw_square_line(1, padding=4) + "\n"
+        res += "#" * width + draw_square_line(2) + "\n"
+        mprompt = self.prompts["-hue"]
+        pprompt = self.prompts["+hue"]
+        res += mprompt
+        title = "hue"
+        res += " " * ((width // 2) - len(mprompt) - ((len(title) + 1)//2))
+        res += title
+        res += " " * ((width // 2) - len(pprompt) - (len(title)//2))
+        res += pprompt
+        res += draw_square_line(3) + "\n" 
+        res += " " * width + draw_square_line(4) + "\n"
+
+        #saturation
+        res += "#" * width + draw_square_line(5) + "\n##"
+        color_list = []
+        saturation1 = saturation
+        for _ in range(self.radius):
+            saturation1 -= self.deltas["saturation"]
+            if saturation1 < 0:
+                saturation1 = 0
+            color_list.append(Color.create_from_hsva(hue, saturation1, value, alpha))
+
+        color_list.reverse()
+
+        color_list.append(Color.create_from_hsva(hue, saturation, value, alpha))
+
+        saturation1 = saturation
+        for _ in range(self.radius):
+            saturation1 += self.deltas["saturation"]
+            if saturation1 > 100:
+                saturation1 = 100
+            color_list.append(Color.create_from_hsva(hue, saturation1, value, alpha))
+
+        for color in color_list:
+            res +=  str(tc1 + color) + "#" + str(tc2 + color) + "#"
+
+        res += CLEAR_COLOR
+        res += "##"
+        res += f"{saturation: 6}"
+        res += draw_square_line(6, padding=4) + "\n"
+        res += "#" * width + draw_square_line(7) + "\n"
+        mprompt = self.prompts["-saturation"]
+        pprompt = self.prompts["+saturation"]
+        res += mprompt
+        title = "saturation"
+        res += " " * ((width // 2) - len(mprompt) - ((len(title) + 1)//2))
+        res += title
+        res += " " * ((width // 2) - len(pprompt) - (len(title)//2))
+        res += pprompt
+        res += draw_square_line(8) + "\n" 
+        res += " " * width + draw_square_line(9) + "\n"
+
+        #value
+        res += "#" * width + draw_square_line(10) + "\n##"
+        color_list = []
+        value1 = value
+        for _ in range(self.radius):
+            value1 -= self.deltas["value"]
+            if value1 < 0:
+                value1 = 0
+            color_list.append(Color.create_from_hsva(hue, saturation, value1, alpha))
+
+        color_list.reverse()
+
+        color_list.append(Color.create_from_hsva(hue, saturation, value, alpha))
+
+        value1 = value
+        for _ in range(self.radius):
+            value1 += self.deltas["value"]
+            if value1 > 100:
+                value1 = 100
+            color_list.append(Color.create_from_hsva(hue, saturation, value1, alpha))
+
+        for color in color_list:
+            res +=  str(tc1 + color) + "#" + str(tc2 + color) + "#"
+
+        res += CLEAR_COLOR
+        res += "##"
+        res += f"{value: 6}"
+        res += draw_square_line(11, padding=4) + "\n"
+        res += "#" * width + draw_square_line(12) + "\n"
+        mprompt = self.prompts["-value"]
+        pprompt = self.prompts["+value"]
+        res += mprompt
+        title = "value"
+        res += " " * ((width // 2) - len(mprompt) - ((len(title) + 1)//2))
+        res += title
+        res += " " * ((width // 2) - len(pprompt) - (len(title)//2))
+        res += pprompt
+        res += draw_square_line(13) + "\n"
+        res += " " * width + draw_square_line(14) + "\n"
+
+
+        #alpha
+        res += "#" * width + draw_square_line(15) + "\n##"
+        color_list = []
+        alpha1 = alpha
+        for _ in range(self.radius):
+            alpha1 -= self.deltas["alpha"]
+            if alpha1 < 0.0:
+                alpha1 = 0.0
+            color_list.append(Color.create_from_hsva(hue, saturation, value, alpha1))
+
+        color_list.reverse()
+
+        color_list.append(Color.create_from_hsva(hue, saturation, value, alpha))
+
+        alpha1 = alpha
+        for _ in range(self.radius):
+            alpha1 += self.deltas["alpha"]
+            if alpha1 > 1.0:
+                alpha1 = 1.0
+            color_list.append(Color.create_from_hsva(hue, saturation, value, alpha1))
+
+        for color in color_list:
+            res += str(tc1 + color) + "#" + str(tc2 + color) + "#"
+            
+        res += CLEAR_COLOR
+        res += "##"
+        res += f"{round(alpha * 100): 6}"
+        res += draw_square_line(16, padding=4) + "\n"
+        res += "#" * width + draw_square_line(17) + "\n"
+        mprompt = self.prompts["-alpha"]
+        pprompt = self.prompts["+alpha"]
+        res += mprompt
+        title = "alpha"
+        res += " " * ((width // 2) - len(mprompt) - ((len(title) + 1)//2))
+        res += title
+        res += " " * ((width // 2) - len(pprompt) - (len(title)//2))
+        res += pprompt
+        res += "\n"
+
+
+        return res
+    
+    def increase_hue(self):
+        self.hue += self.deltas["hue"]
+        if self.hue > 360:
+            self.hue = 360
+        self._update_color()
+        
+    def decrease_hue(self):
+        self.hue -= self.deltas["hue"]
+        if self.hue < 0:
+            self.hue = 0
+        self._update_color()
+    
+    def increase_saturation(self):
+        self.saturation += self.deltas["saturation"]
+        if self.saturation > 100:
+            self.saturation = 100
+        self._update_color()
+        
+    def decrease_saturation(self):
+        self.saturation -= self.deltas["saturation"]
+        if self.saturation < 0:
+            self.saturation = 0
+        self._update_color()
+    
+    def increase_value(self):
+        self.value += self.deltas["value"]
+        if self.value > 100:
+            self.value = 100
+        self._update_color()
+        
+    def decrease_value(self):
+        self.value -= self.deltas["value"]
+        if self.value < 0:
+            self.value = 0
+        self._update_color()
+    
+    def increase_alpha(self):
+        self.alpha += self.deltas["alpha"]
+        if self.alpha > 1.0:
+            self.alpha = 1.0
+        self._update_color()
+        
+    def decrease_alpha(self):
+        self.alpha -= self.deltas["alpha"]
+        if self.alpha < 0.0:
+            self.alpha = 0.0
+        self._update_color()
+
+    def set_color(self, color: Color):
+        self.color = color
+        self.hue, self.saturation, self.value, self.alpha = color.get_hsva()
+    
+    @classmethod
+    def create_from_color(cls, radius: int = 10, color: Color = Color(255, 255, 255),
+                 prompts: dict = {
+                     "-hue": "<- [q]",
+                     "+hue": "[w] ->",
+                     "-saturation": "<- [a]",
+                     "+saturation": "[s] ->",
+                     "-value": "<- [z]",
+                     "+value": "[x] ->",
+                     "-alpha": "<- [f]",
+                     "+alpha": "[g] ->"
+                 },
+                 deltas: dict = {
+                     "hue": 5,
+                     "saturation": 5,
+                     "value": 5,
+                     "alpha": 0.05
+                 }):
+        res = ColorPicker(radius=radius, prompts=prompts, deltas=deltas)
+        res.set_color(color)
+        return res
+    
+    
