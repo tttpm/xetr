@@ -112,7 +112,7 @@ def settings():
     
     if ask("(y/N) >> ", preffered="n"):
         print("\nokay! i recommend you use english letters [a]-[z], [A]-[Z] (case matters!), digits [0]-[9], arrow keys, [enter], [space]")
-        print("but you can choose other languages' letters and funny keys like [insert] as well")
+        print("but you can choose funny keys like [insert] as well")
         print("\nso, let's begin!")
         while True:
             used_keys = set()
@@ -140,7 +140,7 @@ def settings():
             for command in cfg.DEFAULT_SETTINGS["colorpicker_keys"]:
                 why = True
                 while why:
-                    print(f"new key for '{command}' (current: {old_conf['colorpicker_keys'][command]}): ", end='')
+                    print(f"new key for '{command}' (current: [{old_conf['colorpicker_keys'][command]}]): ", end='')
                     sys.stdout.flush()
                     
                     new_key = kb.read_key()
