@@ -119,7 +119,7 @@ def settings():
             for command in cfg.DEFAULT_SETTINGS["keys"]:
                 why = True
                 while why:
-                    print(f"new key for '{command}' (current: {old_conf['keys'][command]}): ", end='')
+                    print(f"new key for '{command}' (current: [{old_conf['keys'][command]}]): ", end='')
                     sys.stdout.flush()
                     
                     new_key = kb.read_key()
