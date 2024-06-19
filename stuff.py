@@ -6,7 +6,7 @@ import sys
 import time
 import os
 
-VERSION = "0.2.0"
+VERSION = "0.3.0"
 
 
 def clear():
@@ -51,27 +51,29 @@ USED_LIBS = {'colorama': 'colorama',
              'requests': 'requests'}
             
 k = cfg.get_config()['keys']
-SIDE_TEXTS = [
-    f'''
- 0  | canvas:
- 1  |     up - [{k["crs_move_up"]}], down - [{k["crs_move_down"]}]
- 2  |     right - [{k["crs_move_right"]}], left - [{k["crs_move_left"]}]
- 3  |     show/hide cursor position - [{k["canv_show_cursor_position"]}]      
- 4  |     hide/show background - [{k["canv_hide_background"]}]
- 5  |     undo - [{k["canv_undo"]}], redo - [{k["canv_redo"]}]
- 6  | drawing:
- 7  |     paint one pixel - [{k["crs_click_brush"]}] 
- 8  |     erase one pixel - [{k["crs_click_eraser"]}] 
- 9  |     fill an area - [{k["crs_click_fill"]}] 
- A  |     change color - [{k["clrpckr_open"]}] 
- B  |     pick color from selected pixel - [{k["crs_click_pipette"]}]
- C  |     replace color from selected pixel - [{k["crs_click_replace"]}]
- D  | misc:
- E  |     import skin - [{k["canv_skin_import"]}]
- F  |     export skin - [{k["canv_skin_export"]}]  
- G  |     settings - [{k["back_or_settings"]}]
- H  |     quit - [{k["quit"]}]
-        
+SIDE_TEXT = \
+f'''
+    | canvas:
+ 0  |     up - [{k["crs_move_up"]}], down - [{k["crs_move_down"]}]
+ 1  |     right - [{k["crs_move_right"]}], left - [{k["crs_move_left"]}]
+ 2  |     show/hide cursor position - [{k["canv_show_cursor_position"]}]      
+ 3  |     hide/show background - [{k["canv_hide_background"]}]
+ 4  |     undo - [{k["canv_undo"]}], redo - [{k["canv_redo"]}]
+ 5  |     add new layer - [{k["canv_layer_add"]}]
+ 6  |     delete current layer - [{k["canv_layer_delete"]}]
+ 7  |     go to next/previous layer - [{k["canv_layer_next"]}]/[{k["canv_layer_prev"]}]
+ 8  |     swap layer with next/previous - [{k["canv_layer_swap_next"]}]/[{k["canv_layer_swap_prev"]}]
+ 9  |     combine layer with next/previous - [{k["canv_layer_comb_next"]}]/[{k["canv_layer_comb_prev"]}]
+ A  |     hide/show current layer - [{k["canv_layer_hide"]}]
+ B  | drawing:
+ C  |     paint one pixel - [{k["crs_click_brush"]}] 
+ D  |     erase one pixel - [{k["crs_click_eraser"]}] 
+ E  |     fill an area - [{k["crs_click_fill"]}] 
+ F  |     change color - [{k["clrpckr_open"]}] 
+ G  |     pick color from selected pixel - [{k["crs_click_pipette"]}]
+ H  |     replace color from selected pixel - [{k["crs_click_replace"]}]         
+    | misc: 
+
 lmao this line won't be displayed
 and this
 this too
@@ -85,9 +87,13 @@ Thank tdf for being the cutest girl in the whole universe <3 <3 <3
 
 Thank y'all for support and motivation!
 '''
-]   
-     
-DIGITS1 = "   0 1 2 3 4 5 6 7 8 9 A B C D E F G H I J\n"
+
+
+SIDE_TEXT2 = f'import/export skin - [{k["canv_skin_import"]}]/[{k["canv_skin_export"]}]'
+SIDE_TEXT3 = f'settings - [{k["back_or_settings"]}]'
+SIDE_TEXT4 = f'quit - [{k["quit"]}]'
+
+DIGITS1 = "   0 1 2 3 4 5 6 7 8 9 A B C D E F G H I J      |"
 DIGITS2 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 
@@ -105,7 +111,7 @@ def settings():
     print("\nfirst of all, do u wanna adjust keys?")
     
     if ask("(y/N) >> ", preffered="n"):
-        print("\nokay! i recommend you use english letters [a]-[z], [A]-[Z] (case counts!), digits [0]-[9], arrow keys, [enter], [space]")
+        print("\nokay! i recommend you use english letters [a]-[z], [A]-[Z] (case matters!), digits [0]-[9], arrow keys, [enter], [space]")
         print("but you can choose other languages' letters and funny keys like [insert] as well")
         print("\nso, let's begin!")
         while True:

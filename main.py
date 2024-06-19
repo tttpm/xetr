@@ -1,3 +1,4 @@
+from calendar import c
 import importlib
 
 import weakref
@@ -5,6 +6,7 @@ import traceback
 
 import config
 conf = config.get_config()
+
 import check
 import stuff
 check.libch(stuff.USED_LIBS)
@@ -30,8 +32,8 @@ H = engine.LOOPER_HEIGHT
 W = engine.LOOPER_WIDTH
 
 bkg = engine.ColorMatrix.create_from_trskin(conf["background_skin"])
-main_cursor = engine.Cursor(H//2, W//2, H, W, engine.Color(255, 0, 0))                      
-canv = engine.ColorMatrix(W, H, engine.Color(0,0,0,0), weakref.ref(main_cursor)())
+canv_cursor = engine.Cursor3D(H//2, W//2, 0, H, W, 1, engine.Color.black())                      
+canv = engine.Canvas(W, H, engine.Color(0,0,0,0), canv_cursor, stuff.SIDE_TEXT)
 colorpicker = engine.ColorPicker(radius=7, prompts={
     "-hue": f'<- [{conf["colorpicker_keys"]["decrease_hue"]}]',
     "+hue": f'[{conf["colorpicker_keys"]["increase_hue"]}] ->',
@@ -51,14 +53,15 @@ while True:
     try:
         stuff.clear()
         if show_cursor_position:
-            cross_overlay = stuff.cross(canv.width, canv.height, main_cursor.row, main_cursor.column, st=stuff.SIDE_TEXTS[0])
+            cross_overlay = stuff.cross(canv.width, canv.height, canv.cursor.row, canv.cursor.column)
         else:
-            cross_overlay = engine.ColorMatrix(canv.width, canv.height, engine.Color(0, 0, 0, 0.0), side_text=stuff.SIDE_TEXTS[0])
+            cross_overlay = engine.ColorMatrix(canv.width, canv.height, engine.Color(0, 0, 0, 0.0))
         print(bkg + canv + cross_overlay)
-        print(stuff.DIGITS1)
-        print(f"current color - #{main_cursor.color.get_hex()} {engine.Color(255, 255, 255) + main_cursor.color} {engine.Color(191, 191, 191) + main_cursor.color} {engine.CLEAR_COLOR}")
-        print(f"selected pixel - ({stuff.DIGITS2[main_cursor.column % 26]};{stuff.DIGITS2[main_cursor.row % 26]}) #{canv[main_cursor.row][main_cursor.column].get_hex()} {engine.Color(255, 255, 255) + canv[main_cursor.row][main_cursor.column]} {engine.Color(191, 191, 191) + canv[main_cursor.row][main_cursor.column]} {engine.CLEAR_COLOR}")      
-        
+        print(stuff.DIGITS1 + "     " + stuff.SIDE_TEXT2)
+        print(f"{'|':>49}     {stuff.SIDE_TEXT3}")
+        print(f"current color: #{canv.cursor.color.get_hex()} {engine.Color(255, 255, 255) + canv.cursor.color} {engine.Color(191, 191, 191) + canv.cursor.color} {engine.CLEAR_COLOR}{'|':>22}     {stuff.SIDE_TEXT4}")
+        print(f"selected pixel: ({stuff.DIGITS2[canv.cursor.column % 26]};{stuff.DIGITS2[canv.cursor.row % 26]}) #{canv.get().get_hex()} {engine.Color(255, 255, 255) + canv.get()} {engine.Color(191, 191, 191) + canv.get()} {engine.CLEAR_COLOR}{'|':>15}")      
+        print(f"current layer: {canv.cursor.layer + 1} of {canv.cursor.maxlayer} {'(hidden)' if not canv.show_layer[canv.cursor.layer] else ''}")
         if colorpicker_mode:
             print("\n[COLORPICKER MODE]\n")
             print(colorpicker)
@@ -143,7 +146,7 @@ while True:
                     colorpicker.set_color(engine.Color.create_from_hex(hex))
 
                 case "submit":
-                    main_cursor.color = colorpicker.color
+                    canv.cursor.color = colorpicker.color
                     colorpicker_mode = False
                 case "close":
                     colorpicker_mode = False
@@ -154,16 +157,16 @@ while True:
         match action:
       
             case "crs_move_up":
-                main_cursor.up()
+                canv.cursor.up()
 
             case "crs_move_down":
-                main_cursor.down()
+                canv.cursor.down()
 
             case "crs_move_right":
-                main_cursor.right()
+                canv.cursor.right()
 
             case "crs_move_left":
-                main_cursor.left()
+                canv.cursor.left()
 
             case "crs_click_brush":
                 canv.paint()
@@ -175,7 +178,7 @@ while True:
                 canv.fill()
 
             case "crs_click_pipette":
-                main_cursor.color = canv[main_cursor.row][main_cursor.column]
+                canv.cursor.color = canv.get()
             
             case "crs_click_replace":
                 canv.replace()
@@ -192,29 +195,55 @@ while True:
                     bkg = engine.ColorMatrix.create_from_trskin(conf["background_skin"])
                 else:
                     hide_background = True
-                    bkg = engine.ColorMatrix(engine.LOOPER_WIDTH, engine.LOOPER_HEIGHT, engine.Color(0, 0, 0, 0))
+                    bkg = engine.ColorMatrix(engine.LOOPER_WIDTH, engine.LOOPER_HEIGHT, engine.Color.transparent())
                 
             case "canv_show_cursor_position":
                 show_cursor_position = not show_cursor_position
                 
             case "canv_skin_export":
-                print(f"here your skin is:\n{canv.get_trskin()}")
+                cm = canv.sum()
+                print(f"here your skin is:\n{cm.get_trskin()}")
                 print("type 'img' to save it as PNG file, anything else otherwise")
                 
                 if input(">> ").lower() == "img":
-                    canv.get_img(input("type the path to the image\n>> "))
+                    cm.get_img(input("type the path to the image\n>> "))
                     
             case "canv_skin_import":
                 q = input("and new skin is? (type 'img' if you wanna load skin from PNG image, the skin itself otherwise)\n>> ")
-                oldcanv = canv
                 if q.lower() == "img":
-                    canv = engine.ColorMatrix.create_from_img(input("type the path to the image\n>> "), weakref.ref(main_cursor)(), stuff.SIDE_TEXTS[0])
+                    canv.setl(engine.ColorMatrix.create_from_img(input("type the path to the image\n>> ")))
                 else:
-                    canv = engine.ColorMatrix.create_from_trskin(q, weakref.ref(main_cursor)(), stuff.SIDE_TEXTS[0])
-                canv.prepend_history_from(oldcanv)
+                    canv.setl(engine.ColorMatrix.create_from_trskin(q))
             
+            case "canv_layer_add": 
+                canv.add_layer()
+            case "canv_layer_delete":
+                if stuff.ask("You won't be able to undo this, are you sure? (y/N)", preffered="n"):
+                    canv.remove_layer()
+            case "canv_layer_next":
+                canv.cursor.layer_up()
+            case "canv_layer_prev":
+                canv.cursor.layer_down()
+            
+            case "canv_layer_swap_next":
+                canv.swap_with_next()
+            
+            case "canv_layer_swap_prev": 
+                canv.swap_with_prev()
+            
+            case "canv_layer_comb_next":
+                if stuff.ask("You won't be able to undo this, are you sure? (y/N)", preffered="n"):
+                    canv.combine_with_next()
+
+            case "canv_layer_comb_prev":
+                if stuff.ask("You won't be able to undo this, are you sure? (y/N)", preffered="n"):
+                    canv.combine_with_prev()
+            
+            case "canv_layer_hide":
+                canv.switch()
+
             case "clrpckr_open":
-                colorpicker.set_color(main_cursor.color)
+                colorpicker.set_color(canv.cursor.color)
                 colorpicker_mode = True
             
             case "back_or_settings":
@@ -225,7 +254,6 @@ while True:
                 importlib.reload(kb)
 
                 bkg = engine.ColorMatrix.create_from_trskin(conf["background_skin"])
-                canv.side_text = stuff.SIDE_TEXTS[0].strip('\n').split("\n")
                 print(f"\n\npress [{conf['keys']['back_or_settings']}] to continue")
                 kb.wait_for_command("back_or_settings")
 

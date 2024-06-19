@@ -1,5 +1,5 @@
-from weakref import ref
 from base64 import b64encode, b64decode
+from os import name
 from zlib import decompress, compressobj, MAX_WBITS, DEFLATED
 import copy
 
@@ -10,7 +10,7 @@ CLEAR_COLOR = '\033[0m'
 LOOPER_WIDTH = 20
 LOOPER_HEIGHT = 18
 
-class Color():
+class Color:
     
     '''literally color!!'''
     
@@ -50,7 +50,13 @@ class Color():
             raise ValueError(f'invalid alpha value: {alpha}')
         
 
+    @classmethod
+    def transparent(cls):
+        return Color(0, 0, 0, 0)
 
+    @classmethod
+    def black(cls):
+        return Color(0, 0, 0)
         
     @classmethod
     def create_from_rgba(cls, r: int, g: int, b: int, a: int):
@@ -152,7 +158,7 @@ class Color():
         
         return "{:02X}{:02X}{:02X}{:02X}".format(*self.values())
 
-    def get_ansi(self, back = 0, fore = 1):
+    def get_ansi(self, back: bool = False, fore: bool = True):
         
         '''get ANSI code from Color'''
         
@@ -197,6 +203,9 @@ class Color():
         if alpha255:
             a = round(a * 255)
         return (self.red, self.green, self.blue, a)
+    
+    def fvalues(self):
+        return (self.red / 255, self.green / 255, self.blue / 255, self.alpha)
 
     def copy(self):
         return Color(*self.values())
@@ -204,28 +213,31 @@ class Color():
 
 
 
-class Cursor():
+class Cursor:
 
     def __init__(self, row: int, column: int, maxrow: int, maxcolumn: int, color: Color):
         
         self.row = row
         self.column = column
         self.maxrow = maxrow
-        self.maxcolumn = maxcolumn
+        self.maxcolumn = maxcolumn 
         self.color = color
 
-    def up(self): self.row -= 1 if self.row > 0 else 0
+    def up(self): self.row -= (1 if self.row > 0 else 0)
     
-    def left(self): self.column -= 1 if self.column > 0 else 0
+    def left(self): self.column -= (1 if self.column > 0 else 0)
     
-    def down(self): self.row += 1 if self.row < self.maxrow - 1 else 0
+    def down(self): self.row += (1 if self.row < self.maxrow - 1 else 0)
 
-    def right(self): self.column += 1 if self.column < self.maxcolumn - 1 else 0
+    def right(self): self.column += (1 if self.column < self.maxcolumn - 1 else 0)
+
+    def is_on(self, row: int, column: int) -> bool:
+        return (self.row == row) and (self.column == column)
 
 
 
 
-class ColorArray():
+class ColorArray:
     
     '''array of Colors'''
 
@@ -291,11 +303,11 @@ class ColorArray():
 
 
 
-class ColorMatrix(): 
+class ColorMatrix: 
 
     '''array of ColorArrays'''
     
-    def __init__(self, width: int, height: int, color: Color, cursor = None, side_text: str = '', init_record = True):
+    def __init__(self, width: int, height: int, color: Color = Color.transparent(), cursor = None, side_text: str = None, init_record = True):
 
         self.width = width
         self.height = height
@@ -304,7 +316,10 @@ class ColorMatrix():
         self.history = []
         self.hist_pos = -1
         
-        self.side_text = side_text.strip('\n').split('\n')
+        if side_text != None:
+            self.side_text = side_text.strip('\n').split('\n')
+        else:
+            self.side_text = None
 
         
 
@@ -316,11 +331,6 @@ class ColorMatrix():
 
         if init_record:
             self.__record()
-
-    def set_cursor(self, cursor):
-        self.cursor = cursor
-        for i in range(self.height):
-            self.__content[i].cursor = cursor()
             
     def __getitem__(self, index):
         return self.__content[index]
@@ -342,21 +352,27 @@ class ColorMatrix():
 
     def __str__(self):
         
-        res =   '##' * (self.width + 2)  + '\n'
+        res =   '##' * (self.width + 2)  + (self.side_text[0] if self.side_text != None else '') + '\n'
         
         for i in range(self.height):
-            res += '##' + str(self[i]) + '##' + (self.side_text[i] if i < len(self.side_text) else '') + '\n'
-        return res + '##' * (self.width + 2)
+            res += '##' + str(self[i]) + '##' + (self.side_text[i + 1] if self.side_text != None and i + 1 < len(self.side_text) else '') + '\n'
+        return res + '##' * (self.width + 2) + (self.side_text[i + 2] if self.side_text != None and i + 2 < len(self.side_text) else '')
     
 
 
 
     def __add__(self, other):
 
+        if type(other) == Canvas:
+            res = copy.deepcopy(other)
+            res.insert_layer(0, color_matrix=self)
+            return res
+
+
         if type(other) != ColorMatrix:
-            raise TypeError("can only add ColorMatrix to ColorMatrix")
+            raise TypeError("can only add ColorMatrix or Canvas to ColorMatrix")
         
-        result = ColorMatrix(max(self.width, other.width), max(self.height, other.height), Color(0,0,0,0), self.cursor if self.cursor else other.cursor)
+        result = ColorMatrix(max(self.width, other.width), max(self.height, other.height), Color(0,0,0,0), self.cursor if self.cursor else other.cursor, init_record=False)
 
 
         for i in range(result.height):
@@ -372,12 +388,14 @@ class ColorMatrix():
                     second = other[i][j]
                 
                 result[i][j] = first + second
-                
+        result.__record()
+
         result.side_text = None       
-        if self.side_text:
-            result.side_text = self.side_text
-        if other.side_text:
+        
+        if other.side_text != None:
             result.side_text = other.side_text
+        if self.side_text != None:
+            result.side_text = self.side_text
             
         return result   
 
@@ -449,7 +467,7 @@ class ColorMatrix():
 
 
     @classmethod
-    def create_from_trskin(cls, skin: str, cursor=None, side_text='', init_record=False):
+    def create_from_trskin(cls, skin: str, cursor=None, side_text=None, init_record=False):
         res = ColorMatrix(LOOPER_WIDTH, LOOPER_HEIGHT, Color(0,0,0,0), cursor, side_text, init_record)
         compressed = b64decode(skin[7:])
         hexes = str(decompress(compressed, -MAX_WBITS).decode()).split(';')
@@ -479,7 +497,7 @@ class ColorMatrix():
 
 
     @classmethod
-    def create_from_img(cls, img_path: str, cursor = None, side_text = '', init_record = False):
+    def create_from_img(cls, img_path: str, cursor = None, side_text = None, init_record = False):
         img = Image.open(img_path).convert('RGBA')
         res = ColorMatrix(*img.size, Color(0,0,0,0), cursor, side_text, init_record)
         img = img.load()
@@ -494,7 +512,7 @@ class ColorMatrix():
 
 
     @classmethod
-    def create_from_list(cls, source: list, cursor=None, side_text = '', init_record = False):
+    def create_from_list(cls, source: list, cursor=None, side_text = None, init_record = False):
 
         result = ColorMatrix(len(max(source, key = len)), len(source), Color(0,0,0,0), cursor, side_text, init_record)
 
@@ -510,7 +528,7 @@ class ColorMatrix():
                         
 
     @classmethod
-    def create_looper(cls, primary_color = Color(255, 255, 255), secondary_color = Color(0, 0, 0), background = Color(0,0,0,0), cursor=None, side_text='', init_record = False):
+    def create_looper(cls, primary_color = Color(255, 255, 255), secondary_color = Color(0, 0, 0), background = Color(0,0,0,0), cursor=None, side_text = None, init_record = False):
         e = background
         p, s = primary_color, secondary_color
         x, y = p + Color(0,0,0,68), s + Color(0,0,0,68)
@@ -870,5 +888,158 @@ class ColorPicker:
         res = ColorPicker(radius=radius, prompts=prompts, deltas=deltas)
         res.set_color(color)
         return res
+
+
+class Cursor3D(Cursor):
+    def __init__(self, row: int, column: int, layer: int, maxrow: int, maxcolumn: int, maxlayer: int, color: Color):
+        super().__init__(row, column, maxrow, maxcolumn, color)
+        self.layer = layer
+        self.maxlayer = maxlayer
+
+    def layer_down(self): 
+        self.layer -= (1 if self.layer > 0 else 0)
+
+    def layer_up(self): 
+        self.layer += (1 if self.layer < self.maxlayer - 1 else 0)
+
+    def is_on3(self, row: int, column: int, layer: int) -> bool:
+        return self.is_on(row, column) and (layer == self.layer)
+
+class Canvas:
+
+    def __init__(self, width: int, height: int, color: Color = Color.transparent(), cursor: Cursor3D = None, side_text: str = None):
+        self.width = width
+        self.height = height
+        self.side_text = side_text
+        if cursor == None:
+            cursor = Cursor3D(0, 0, 0, height, width, 1, Color.black())
+        self.cursor = cursor
+        self.layers = [ColorMatrix(width, height, color)]
+        self.show_layer = [True]
+
+    def sum(self, ignore_cursor: bool = True, ignore_hidden: bool = True) -> ColorMatrix:
+        res = ColorMatrix(self.width, self.height, side_text=self.side_text)
+        for i in range(self.cursor.maxlayer):
+            if ignore_hidden and not self.show_layer[i]:
+                continue
+            cm = copy.deepcopy(self.layers[i])
+            if (not ignore_cursor) and (i == self.cursor.layer):
+                cm.paint(self.cursor.row, self.cursor.column, self.cursor.color)
+            res = res + cm
+        return res
+
+    def __str__(self):
+        return self.sum(ignore_cursor=False).__str__()
     
+    def __getitem__(self, index: int):
+        return self.layers[index]
     
+    def __setitem__(self, index: int, value: ColorMatrix):
+        self.layers[index] = value
+
+    def paint(self, row: int = None, column: int = None, layer: int = None, new_color: Color = None):
+        row = row if row != None else self.cursor.row
+        column = column if column != None else self.cursor.column
+        layer = layer if layer != None else self.cursor.layer
+        new_color = new_color if new_color != None else self.cursor.color
+        self[layer].paint(row, column, new_color)
+
+    def fill(self, row: int = None, column: int = None, layer: int = None, new_color: Color = None):
+        row = row if row != None else self.cursor.row
+        column = column if column != None else self.cursor.column
+        layer = layer if layer != None else self.cursor.layer
+        new_color = new_color if new_color != None else self.cursor.color
+        self[layer].fill(row, column, new_color)
+
+    def undo(self, index: int = None):
+        if index == None:
+            index = self.cursor.layer
+        return self[index].undo()
+
+    def redo(self, index: int = None):
+        if index == None:
+            index = self.cursor.layer
+        return self[index].redo()
+
+    def add_layer(self, color: Color = Color.transparent(), color_matrix: ColorMatrix = None):
+        if color_matrix == None:
+            color_matrix = ColorMatrix(self.width, self.height, color)
+        self.layers.append(color_matrix)
+        self.show_layer.append(True)
+        self.cursor.maxlayer += 1
+    
+    def insert_layer(self, index: int = None, color: Color = Color.transparent(), color_matrix: ColorMatrix = None):
+        if index == None:
+            index = self.cursor.layer
+        if color_matrix == None:
+            color_matrix = ColorMatrix(self.width, self.height, color)
+        self.layers.insert(index, color_matrix)
+        self.show_layer.insert(index, True)
+        self.cursor.maxlayer += 1
+    
+    def remove_layer(self, index: int = None):
+        if index == None:
+            index = self.cursor.layer
+        if index >= self.cursor.maxlayer:
+            raise IndexError(f"cant close {index} layer when there are only {self.cursor.maxlayer} of them")
+        self.layers.pop(index)
+        self.show_layer.pop(index)
+        self.cursor.maxlayer -= 1
+        if self.cursor.layer >= self.cursor.maxlayer: 
+            self.cursor.layer_down()
+        
+    def combine_with_next(self, index: int = None):
+        if index == None:
+            index = self.cursor.layer
+        if index >= self.cursor.maxlayer - 1:
+            return
+        self[index] = self[index] + self[index + 1]
+        self.remove_layer(index + 1)
+
+    def swap_with_next(self, index: int = None):
+        if index == None:
+            index = self.cursor.layer
+        if index >= self.cursor.maxlayer - 1:
+            return
+        self[index], self[index + 1] = self[index + 1], self[index]
+
+    def combine_with_prev(self, index: int = None):
+        if index == None:
+            index = self.cursor.layer
+        if index <= 0:
+            return
+        self[index] = self[index] + self[index - 1]
+        self.remove_layer(index - 1)
+
+    def swap_with_prev(self, index: int = None):
+        if index == None:
+            index = self.cursor.layer
+        if index <= 0:
+            return
+        self[index], self[index - 1] = self[index - 1], self[index]
+
+
+    def switch(self, index: int = None, show: bool = None):
+        if index == None:
+            index = self.cursor.layer
+        if show == None:
+            show = not self.show_layer[index]
+        self.show_layer[index] = show
+    
+    def __add__(self, other: ColorMatrix):
+        res = copy.deepcopy(self)
+        res.add_layer(color_matrix=other)
+        return res
+
+    def get(self, row: int = None, column: int = None, layer: int = None):
+        row = row if row != None else self.cursor.row
+        column = column if column != None else self.cursor.column
+        layer = layer if layer != None else self.cursor.layer
+        return self[layer][row][column]
+    
+    def setl(self, cm: ColorMatrix, layer: int = None, prep_hist: bool = True):
+        if layer == None:
+            layer = self.cursor.layer
+        if prep_hist:
+            cm.prepend_history_from(self[layer])
+        self[layer] = cm
